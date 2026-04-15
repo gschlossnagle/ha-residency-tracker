@@ -1,0 +1,13 @@
+{
+  "domain": "residency_tracker",
+  "name": "Residency Tracker",
+  "version": "0.1.0",
+  "documentation": "https://github.com/gschlossnagle/ha-residency-tracker",
+  "requirements": [
+    "reverse_geocoder==1.5.1",
+    "pycountry==22.3.5"
+  ],
+  "dependencies": [],
+  "codeowners": [],
+  "iot_class": "local_polling"
+}
