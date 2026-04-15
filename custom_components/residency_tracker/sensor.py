@@ -1,7 +1,6 @@
 """Residency Tracker sensors."""
 from __future__ import annotations
 
-import logging
 from datetime import datetime, timezone
 
 from homeassistant.components.sensor import SensorEntity
@@ -12,8 +11,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, SIGNAL_UPDATE
 from .db import ResidencyDB
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

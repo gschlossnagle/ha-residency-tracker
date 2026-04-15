@@ -16,12 +16,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_time_change
 
 from .const import DOMAIN, POLL_TIMES
-
-PLATFORMS = ["sensor", "button"]
 from .coordinator import poll_all_persons
 from .db import ResidencyDB
 
 _LOGGER = logging.getLogger(__name__)
+
+PLATFORMS = ["sensor", "button"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

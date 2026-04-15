@@ -6,7 +6,6 @@ from datetime import datetime, timezone
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.util import dt as dt_util
 
 from .const import SIGNAL_UPDATE
 from .db import ResidencyDB

@@ -1,7 +1,7 @@
 {
   "domain": "residency_tracker",
   "name": "Residency Tracker",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "documentation": "https://github.com/gschlossnagle/ha-residency-tracker",
   "issue_tracker": "https://github.com/gschlossnagle/ha-residency-tracker/issues",
   "requirements": [
