@@ -10,11 +10,10 @@ the next scheduled poll — no restart or reconfiguration required.
 from __future__ import annotations
 
 import logging
-from datetime import time
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.event import async_track_time
+from homeassistant.helpers.event import async_track_time_change
 
 from .const import DOMAIN, POLL_TIMES
 
@@ -40,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     for time_str in POLL_TIMES:
         hour, minute = (int(p) for p in time_str.split(":"))
-        unsub = async_track_time(hass, _handle_poll, time(hour, minute))
+        unsub = async_track_time_change(hass, _handle_poll, hour=hour, minute=minute, second=0)
         unsub_list.append(unsub)
         _LOGGER.info("Residency poll scheduled at %s local time", time_str)
 
