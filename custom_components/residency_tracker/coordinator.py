@@ -5,8 +5,10 @@ import logging
 from datetime import datetime, timezone
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import dt as dt_util
 
+from .const import SIGNAL_UPDATE
 from .db import ResidencyDB
 from .geocoder import resolve_jurisdiction
 
@@ -60,3 +62,5 @@ async def poll_all_persons(hass: HomeAssistant, db: ResidencyDB) -> None:
             lon,
             gps_accuracy,
         )
+
+    async_dispatcher_send(hass, SIGNAL_UPDATE)

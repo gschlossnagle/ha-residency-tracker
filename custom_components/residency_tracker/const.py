@@ -4,3 +4,5 @@ DOMAIN = "residency_tracker"
 POLL_TIMES = ["08:00", "20:00"]
 
 DB_FILENAME = "residency_tracker.db"
+
+SIGNAL_UPDATE = f"{DOMAIN}_update"

@@ -71,6 +71,34 @@ class ResidencyDB:
         )
         self._conn.commit()
 
+    def get_latest_observation(self, person_id: str) -> "sqlite3.Row | None":
+        assert self._conn is not None
+        return self._conn.execute(
+            """
+            SELECT * FROM residency_observations
+            WHERE person_id = ?
+            ORDER BY observed_at DESC
+            LIMIT 1
+            """,
+            (person_id,),
+        ).fetchone()
+
+    def get_days_by_jurisdiction(self, person_id: str, year: int) -> dict:
+        """Return {jurisdiction: distinct_days} for the given person and calendar year."""
+        assert self._conn is not None
+        rows = self._conn.execute(
+            """
+            SELECT jurisdiction, COUNT(DISTINCT date(observed_at)) AS days
+            FROM residency_observations
+            WHERE person_id = ?
+              AND observed_at >= ? AND observed_at < ?
+            GROUP BY jurisdiction
+            ORDER BY days DESC
+            """,
+            (person_id, f"{year}-01-01", f"{year + 1}-01-01"),
+        ).fetchall()
+        return {row["jurisdiction"]: row["days"] for row in rows}
+
     def get_observations(
         self,
         person_id: str | None = None,

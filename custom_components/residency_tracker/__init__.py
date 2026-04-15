@@ -17,6 +17,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_time
 
 from .const import DOMAIN, POLL_TIMES
+
+PLATFORMS = ["sensor"]
 from .coordinator import poll_all_persons
 from .db import ResidencyDB
 
@@ -50,18 +52,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Run an immediate poll on startup so we don't wait until the first window
     hass.async_create_task(poll_all_persons(hass, db))
 
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    data = hass.data[DOMAIN].pop(entry.entry_id, {})
+    ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
+    data = hass.data[DOMAIN].pop(entry.entry_id, {})
     for unsub in data.get("unsub_list", []):
         unsub()
-
     db = data.get("db")
     if db:
         await hass.async_add_executor_job(db.close)
 
-    return True
+    return ok

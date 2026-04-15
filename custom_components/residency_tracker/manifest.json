@@ -1,7 +1,7 @@
 {
   "domain": "residency_tracker",
   "name": "Residency Tracker",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "documentation": "https://github.com/gschlossnagle/ha-residency-tracker",
   "requirements": [
     "reverse_geocoder==1.5.1",
