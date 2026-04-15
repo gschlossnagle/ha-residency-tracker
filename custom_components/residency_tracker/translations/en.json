@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Residency Tracker",
+        "description": "Track where your people are (US state or country) and log observations to a local SQLite database. No configuration required."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Only one Residency Tracker instance can be configured."
+    }
+  }
+}

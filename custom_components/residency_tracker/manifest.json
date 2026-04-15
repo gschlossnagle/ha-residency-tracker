@@ -8,6 +8,7 @@
     "pycountry==22.3.5"
   ],
   "dependencies": [],
-  "codeowners": [],
+  "codeowners": ["@gschlossnagle"],
+  "config_flow": true,
   "iot_class": "local_polling"
 }

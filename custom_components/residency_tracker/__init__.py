@@ -23,30 +23,45 @@ from .db import ResidencyDB
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up via configuration.yaml (no config entry needed)."""
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Residency Tracker from a config entry (UI install)."""
     hass.data.setdefault(DOMAIN, {})
 
     db = ResidencyDB(hass.config.config_dir)
     await hass.async_add_executor_job(db.connect)
-    hass.data[DOMAIN]["db"] = db
+
+    unsub_list = []
 
     async def _handle_poll(now) -> None:
         _LOGGER.debug("Residency poll triggered at %s", now)
         await poll_all_persons(hass, db)
 
-    # Schedule polls at each configured time (local HA timezone)
     for time_str in POLL_TIMES:
         hour, minute = (int(p) for p in time_str.split(":"))
-        async_track_time(hass, _handle_poll, time(hour, minute))
+        unsub = async_track_time(hass, _handle_poll, time(hour, minute))
+        unsub_list.append(unsub)
         _LOGGER.info("Residency poll scheduled at %s local time", time_str)
+
+    hass.data[DOMAIN][entry.entry_id] = {
+        "db": db,
+        "unsub_list": unsub_list,
+    }
 
     # Run an immediate poll on startup so we don't wait until the first window
     hass.async_create_task(poll_all_persons(hass, db))
 
-    async def _async_shutdown(event) -> None:
-        await hass.async_add_executor_job(db.close)
+    return True
 
-    hass.bus.async_listen_once("homeassistant_stop", _async_shutdown)
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    data = hass.data[DOMAIN].pop(entry.entry_id, {})
+
+    for unsub in data.get("unsub_list", []):
+        unsub()
+
+    db = data.get("db")
+    if db:
+        await hass.async_add_executor_job(db.close)
 
     return True
