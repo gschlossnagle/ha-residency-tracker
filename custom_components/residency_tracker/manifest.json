@@ -5,7 +5,7 @@
   "documentation": "https://github.com/gschlossnagle/ha-residency-tracker",
   "requirements": [
     "reverse_geocoder==1.5.1",
-    "pycountry==22.3.5"
+    "pycountry>=23.12.11"
   ],
   "dependencies": [],
   "codeowners": ["@gschlossnagle"],
