@@ -18,7 +18,7 @@ from homeassistant.helpers.event import async_track_time
 
 from .const import DOMAIN, POLL_TIMES
 
-PLATFORMS = ["sensor"]
+PLATFORMS = ["sensor", "button"]
 from .coordinator import poll_all_persons
 from .db import ResidencyDB
 
@@ -49,8 +49,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "unsub_list": unsub_list,
     }
 
-    # Run an immediate poll on startup so we don't wait until the first window
-    hass.async_create_task(poll_all_persons(hass, db))
+    # Poll immediately if the DB is empty (first install) so sensors have data right away
+    has_data = await hass.async_add_executor_job(db.has_observations)
+    if not has_data:
+        _LOGGER.info("No observations found — running initial poll")
+        hass.async_create_task(poll_all_persons(hass, db))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

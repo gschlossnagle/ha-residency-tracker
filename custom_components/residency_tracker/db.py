@@ -71,6 +71,14 @@ class ResidencyDB:
         )
         self._conn.commit()
 
+    def has_observations(self) -> bool:
+        """Return True if any observations have ever been recorded."""
+        assert self._conn is not None
+        row = self._conn.execute(
+            "SELECT 1 FROM residency_observations LIMIT 1"
+        ).fetchone()
+        return row is not None
+
     def get_latest_observation(self, person_id: str) -> "sqlite3.Row | None":
         assert self._conn is not None
         return self._conn.execute(
