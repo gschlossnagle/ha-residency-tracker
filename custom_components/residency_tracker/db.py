@@ -107,6 +107,29 @@ class ResidencyDB:
         ).fetchall()
         return {row["jurisdiction"]: row["days"] for row in rows}
 
+    def get_all_years_days_by_jurisdiction(self, person_id: str) -> dict:
+        """Return {year: {jurisdiction: days}} for all years with observations for this person."""
+        assert self._conn is not None
+        rows = self._conn.execute(
+            """
+            SELECT strftime('%Y', observed_at) AS year,
+                   jurisdiction,
+                   COUNT(DISTINCT date(observed_at)) AS days
+            FROM residency_observations
+            WHERE person_id = ?
+            GROUP BY year, jurisdiction
+            ORDER BY year DESC, days DESC
+            """,
+            (person_id,),
+        ).fetchall()
+        result: dict = {}
+        for row in rows:
+            year = row["year"]
+            if year not in result:
+                result[year] = {}
+            result[year][row["jurisdiction"]] = row["days"]
+        return result
+
     def get_observations(
         self,
         person_id: str | None = None,
