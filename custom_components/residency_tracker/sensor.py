@@ -20,25 +20,23 @@ async def async_setup_entry(
 ) -> None:
     db: ResidencyDB = hass.data[DOMAIN][entry.entry_id]["db"]
 
-    now = datetime.now(timezone.utc)
-    current_year = now.year
-    previous_year = now.year - 1
-
     entities = []
     for state in hass.states.async_all("person"):
         person_id = state.object_id
         friendly_name = state.name
         entities.extend([
             ResidencyCurrentLocationSensor(hass, db, person_id, friendly_name),
-            ResidencyYearDaysSensor(hass, db, person_id, friendly_name, current_year),
-            ResidencyYearDaysSensor(hass, db, person_id, friendly_name, previous_year),
+            ResidencyDaysSensor(hass, db, person_id, friendly_name),
         ])
 
     async_add_entities(entities, update_before_add=True)
 
 
 class ResidencyCurrentLocationSensor(SensorEntity):
-    """Current jurisdiction for a person based on their most recent observation."""
+    """Current jurisdiction for a person based on their most recent observation.
+
+    Entity ID: sensor.residency_tracker_current_location_{person_id}
+    """
 
     _attr_icon = "mdi:map-marker-account"
 
@@ -48,8 +46,9 @@ class ResidencyCurrentLocationSensor(SensorEntity):
         self._hass = hass
         self._db = db
         self._person_id = person_id
-        self._attr_name = f"{friendly_name} Current Location"
-        self._attr_unique_id = f"residency_tracker_{person_id}_location"
+        # Name slugifies to: residency_tracker_current_location_{person_id}
+        self._attr_name = f"Residency Tracker Current Location {friendly_name}"
+        self._attr_unique_id = f"residency_tracker_{person_id}_current_location"
 
     async def async_added_to_hass(self) -> None:
         self.async_on_remove(
@@ -74,8 +73,15 @@ class ResidencyCurrentLocationSensor(SensorEntity):
             self._attr_extra_state_attributes = {}
 
 
-class ResidencyYearDaysSensor(SensorEntity):
-    """Days per jurisdiction for a person in a given calendar year."""
+class ResidencyDaysSensor(SensorEntity):
+    """Days per jurisdiction for a person, grouped by year.
+
+    Entity ID: sensor.residency_tracker_residency_days_{person_id}
+
+    State: total days recorded in the current calendar year.
+    Attributes: {year: {jurisdiction: days}} for all years with observations.
+      New years are included automatically as observations are added.
+    """
 
     _attr_icon = "mdi:calendar-account"
     _attr_native_unit_of_measurement = "days"
@@ -86,14 +92,13 @@ class ResidencyYearDaysSensor(SensorEntity):
         db: ResidencyDB,
         person_id: str,
         friendly_name: str,
-        year: int,
     ) -> None:
         self._hass = hass
         self._db = db
         self._person_id = person_id
-        self._year = year
-        self._attr_name = f"{friendly_name} Residency Days {year}"
-        self._attr_unique_id = f"residency_tracker_{person_id}_days_{year}"
+        # Name slugifies to: residency_tracker_residency_days_{person_id}
+        self._attr_name = f"Residency Tracker Residency Days {friendly_name}"
+        self._attr_unique_id = f"residency_tracker_{person_id}_days"
 
     async def async_added_to_hass(self) -> None:
         self.async_on_remove(
@@ -105,8 +110,8 @@ class ResidencyYearDaysSensor(SensorEntity):
         self.async_schedule_update_ha_state(True)
 
     def update(self) -> None:
-        days_by_jurisdiction = self._db.get_days_by_jurisdiction(
-            self._person_id, self._year
-        )
-        self._attr_native_value = sum(days_by_jurisdiction.values())
-        self._attr_extra_state_attributes = days_by_jurisdiction
+        all_years = self._db.get_all_years_days_by_jurisdiction(self._person_id)
+        current_year = str(datetime.now(timezone.utc).year)
+        current_year_data = all_years.get(current_year, {})
+        self._attr_native_value = sum(current_year_data.values())
+        self._attr_extra_state_attributes = all_years
